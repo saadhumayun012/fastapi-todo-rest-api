@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.security import OAuth2PasswordBearer # OAuth2PasswordBearer extract the token form header ( i am removing this now i change the procedure and save the token in the cookies)
+from fastapi.security import OAuth2PasswordBearer # OAuth2PasswordBearer extract the token form header ( Dont NEED when want to save the token in cookie)
 from typing import Annotated
 from passlib.context import CryptContext #use to hashed the password
 from datetime import datetime, timedelta, timezone
@@ -16,8 +16,8 @@ router = APIRouter(
     tags=["auth"]
 )
 
-#a varuabel fro oauthbearer (Dont NEED WHEN I DONT SAVE THE TOKEN IN COOKIE)
-oauth_bearer = OAuth2PasswordBearer(tokenUrl="/auth/login")
+#for oauth2bearer (Dont need it when want to save the token in cookie)
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 #hash the password
 bcrypt_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -48,14 +48,14 @@ def verify_token(token: str):
     except JWTError:
         raise ValueError("Invalid token")
 
-#use it as dependecy injection it return the user as a object after verifying the token    
+#use it as dependecy injection - it return the user as a object after verifying the token    
 def get_current_user(
     # request: Request,
     db: db_dependency,
-    token: Annotated[str, Depends(oauth_bearer)]
+    token: Annotated[str, Depends(oauth2_bearer)]
 ):
+    # use it when want to save the token in cookie
     # token = request.cookies.get("access_token")
-
     # if not token:
     #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
@@ -95,7 +95,7 @@ def create_user(
     db.commit()
     db.refresh(user)
 
-#this is the login route means from there i get the token
+#login route -->  get the token
 @router.post("/login")
 def login_for_access_token( 
     # response: Response,
@@ -121,7 +121,7 @@ def login_for_access_token(
 
     return {"access_token": token, "type": "Bearer"}
 
-#logout routte
+#logout route
 # @router.post("/logout",status_code=status.HTTP_200_OK)
 # def logout(
 #     response: Response
